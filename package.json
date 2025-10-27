@@ -1,0 +1,22 @@
+{
+  "name": "reaper-gift-wheel",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "NODE_ENV=production node server.js",
+    "scraper": "node scraper.js" 
+  },
+  "dependencies": {
+    "@upstash/redis": "^1.20.2",
+    "axios": "^1.7.0",
+    "cheerio": "^1.0.0-rc.12",
+    "express": "^4.19.2",
+    "googleapis": "^131.0.0",
+    "next": "14.1.0", 
+    "react": "18.2.0",
+    "react-dom": "18.2.0"
+  }
+}
