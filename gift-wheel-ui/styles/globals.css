@@ -1,4 +1,4 @@
-/* ✅ Import Tooth and Nail font */
+/* Import custom font */
 @font-face {
   font-family: 'ToothAndNail';
   src: url('/fonts/ToothAndNail-Regular.otf') format('opentype');
@@ -6,56 +6,104 @@
   font-style: normal;
 }
 
-/* ✅ Global reset */
-* {
+html, body {
   margin: 0;
   padding: 0;
-  box-sizing: border-box;
-}
-
-html, body, #__next {
-  height: 100%;
-  width: 100%;
+  background: url('/background.jpg') center center / cover no-repeat fixed;
   overflow: hidden;
-}
-
-/* ✅ Background */
-body {
-  background-image: url('/background.jpg');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
   font-family: Arial, sans-serif;
-  color: white;
 }
 
-/* ✅ Title font */
+.scale-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(var(--scale, 1));
+  width: 1920px;
+  height: 1080px;
+}
+
 .title {
   font-family: 'ToothAndNail', Arial, sans-serif;
-  letter-spacing: 2px;
-}
-
-/* ✅ Wheel container */
-.wheel-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 40px;
-}
-
-/* ✅ Spin button */
-.spin-btn {
-  padding: 12px 24px;
-  font-size: 1.2em;
-  background-color: red;
+  font-size: 9.19em;
+  text-align: center;
   color: white;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
   margin-top: 20px;
 }
 
-/* ✅ Winner popup */
+.subtitle-left, .subtitle-right {
+  position: absolute;
+  top: 45%;
+  transform: translateY(-50%);
+  white-space: pre-line;
+  text-align: center;
+  line-height: 1.2;
+  font-family: 'ToothAndNail', Arial, sans-serif;
+  font-size: 5.25em;
+  color: white;
+  text-shadow: 1px 1px 4px rgba(0,0,0,0.7);
+}
+
+.subtitle-left {
+  left: 13.5%;
+}
+
+.subtitle-right {
+  right: 7.5%;
+}
+
+.wheel-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 80px;
+}
+
+.controls {
+  display: flex;
+  justify-content: center;
+  margin-top: 40px;
+  gap: 20px;
+}
+
+.spin-btn, .clear-btn {
+  padding: 12px 24px;
+  font-size: 1.15em;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+}
+
+.spin-btn {
+  background-color: #FF0000;
+  color: white;
+  font-weight: bold;
+}
+
+.clear-btn {
+  background-color: #555;
+  color: white;
+}
+
+.status-badge {
+  position: absolute;
+  bottom: 48px;
+  right: 24px;
+  background: rgba(0,0,0,0.5);
+  color: white;
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-weight: 600;
+  z-index: 9999;
+}
+
+.footer {
+  text-align: center;
+  font-family: Arial, sans-serif;
+  margin-top: 20px;
+  color: white;
+  font-size: 1em;
+}
+
 .winner-modal {
   position: fixed;
   top: 0;
@@ -66,26 +114,29 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 9999;
+  z-index: 11000;
 }
 
-.winner-content {
-  background-color: white;
-  color: black;
-  padding: 40px;
-  border-radius: 20px;
+.winner-box {
+  background: white;
+  padding: 43px 72px;
+  border-radius: 21px;
   text-align: center;
+  box-shadow: 0 0 30px rgba(0,0,0,0.5);
+  transform: scale(0);
   animation: popBounce 0.5s forwards;
 }
 
-.winner-content img.grim-swing {
-  animation: swing 1.2s ease-in-out infinite;
-  transform-origin: top center;
+.winner-box img {
   width: 120px;
   margin-bottom: 20px;
 }
 
-/* ✅ Modal animations */
+.grim-swing {
+  animation: swing 1.2s ease-in-out infinite;
+  transform-origin: top center;
+}
+
 @keyframes swing {
   0% { transform: rotate(-10deg); }
   50% { transform: rotate(10deg); }
