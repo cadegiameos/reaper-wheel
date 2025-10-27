@@ -1,19 +1,19 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 export default function Home() {
   const [entries, setEntries] = useState([]);
-  const [name, setName] = useState("");
-  const [amount, setAmount] = useState(1);
-  const [isSpinning, setIsSpinning] = useState(false);
-  const [rotation, setRotation] = useState(0);
   const [winnerIndex, setWinnerIndex] = useState(null);
   const [flash, setFlash] = useState(false);
   const [showWinnerModal, setShowWinnerModal] = useState(false);
-  const [scrapeStatus, setScrapeStatus] = useState("Checking…");
+  const [rotation, setRotation] = useState(0);
+  const [isSpinning, setIsSpinning] = useState(false);
+  const [scale, setScale] = useState(1);
+
+  const [scrapeStatus, setScrapeStatus] = useState("Checking live status...");
+  
   const canvasRef = useRef(null);
 
-  // 📌 Scaling for any resolution
-  const [scale, setScale] = useState(1);
+  // ✅ Resize scaling to match original 1920x1080 design
   useEffect(() => {
     const handleResize = () => {
       const scaleX = window.innerWidth / 1920;
@@ -25,90 +25,70 @@ export default function Home() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // 📌 Load initial entries
+  // ✅ Fetch entries initially
   useEffect(() => {
-    fetch("/api/entries")
-      .then((res) => res.json())
-      .then((data) => {
+    (async () => {
+      try {
+        const res = await fetch("/api/entries");
+        const data = await res.json();
         if (Array.isArray(data.entries)) setEntries(data.entries);
-      })
-      .catch(() => {});
+      } catch {}
+    })();
   }, []);
 
-  // 📌 Poll gift scraper every 10s
+  // ✅ Poll scraper status from backend
   useEffect(() => {
-    const interval = setInterval(async () => {
+    const pollStatus = async () => {
       try {
-        const status = await fetch("/api/status").then((res) => res.json());
-        setScrapeStatus(status.state || "Checking…");
-
-        const update = await fetch("/api/entries").then((res) => res.json());
-        if (Array.isArray(update.entries)) setEntries(update.entries);
-      } catch (e) {}
-    }, 10000);
+        const res = await fetch("/api/scraper-status");
+        const data = await res.json();
+        if (data.status) setScrapeStatus(data.status);
+      } catch {
+        setScrapeStatus("Scraper Offline");
+      }
+    };
+    pollStatus();
+    const interval = setInterval(pollStatus, 10000);
     return () => clearInterval(interval);
   }, []);
 
-  // 📌 Draw wheel
+  // ✅ Poll new gifted entries
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    const size = canvas.width;
-    const radius = size / 2;
-    ctx.clearRect(0, 0, size, size);
+    const poll = setInterval(async () => {
+      try {
+        const res = await fetch("/api/entries");
+        const data = await res.json();
+        if (Array.isArray(data.entries)) setEntries(data.entries);
+      } catch {}
+    }, 10000);
+    return () => clearInterval(poll);
+  }, []);
 
-    if (entries.length === 0) {
-      ctx.fillStyle = "white";
-      ctx.font = "20px Arial";
-      ctx.textAlign = "center";
-      ctx.fillText("No entries yet", radius, radius);
-      return;
-    }
-
-    const anglePerSlice = (2 * Math.PI) / entries.length;
-
-    entries.forEach((entry, i) => {
-      const startAngle = i * anglePerSlice;
-      const endAngle = startAngle + anglePerSlice;
-
-      ctx.beginPath();
-      ctx.moveTo(radius, radius);
-      ctx.arc(radius, radius, radius, startAngle, endAngle);
-      ctx.fillStyle = `hsl(${(i * 360) / entries.length}, 70%, 85%)`;
-      ctx.fill();
-      ctx.closePath();
-
-      if (winnerIndex === i && flash) {
-        ctx.beginPath();
-        ctx.moveTo(radius, radius);
-        ctx.arc(radius, radius, radius, startAngle, endAngle);
-        ctx.strokeStyle = "white";
-        ctx.lineWidth = 6;
-        ctx.stroke();
-        ctx.closePath();
+  // ✅ Clear wheel with password
+  const clearEntriesWithPassword = async () => {
+    const password = prompt("Enter the clear password:");
+    if (!password) return;
+    try {
+      const res = await fetch("/api/clear", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setEntries([]);
+        setWinnerIndex(null);
+        setFlash(false);
+        setShowWinnerModal(false);
+      } else {
+        alert(data.message || "Invalid password");
       }
+    } catch (err) {
+      alert("Error clearing entries");
+    }
+  };
 
-      ctx.save();
-      ctx.translate(radius, radius);
-      ctx.rotate(startAngle + anglePerSlice / 2);
-
-      const sliceWidth = radius * anglePerSlice;
-      let fontSize = Math.min(40, sliceWidth / entry.length);
-      fontSize = Math.max(fontSize, 12);
-      ctx.font = `bold ${fontSize}px Arial`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillStyle = "#000";
-
-      const textRadius = radius * 0.6;
-      ctx.fillText(entry, textRadius, 0);
-
-      ctx.restore();
-    });
-  }, [entries, rotation, winnerIndex, flash]);
-
-  // 📌 Spin wheel
+  // ✅ Spin wheel
   const spinWheel = () => {
     if (entries.length === 0) return alert("No entries to spin!");
     setIsSpinning(true);
@@ -127,36 +107,64 @@ export default function Home() {
     }, 5000);
   };
 
-  // 📌 Flash winner
+  // ✅ Flash effect on winner
   useEffect(() => {
     if (winnerIndex !== null) {
-      const flashInterval = setInterval(() => setFlash((prev) => !prev), 500);
+      const flashInterval = setInterval(() => {
+        setFlash((prev) => !prev);
+      }, 500);
       return () => clearInterval(flashInterval);
     }
   }, [winnerIndex]);
 
-  // 📌 Clear entries with password prompt
-  const clearEntries = async () => {
-    const password = prompt("Enter password to clear the wheel:");
-    if (!password) return;
-
-    const res = await fetch("/api/clear", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password }),
+  // ✅ Draw wheel
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const size = canvas.width;
+    const radius = size / 2;
+    ctx.clearRect(0, 0, size, size);
+    if (entries.length === 0) {
+      ctx.fillStyle = "white";
+      ctx.font = "20px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText("No entries yet", radius, radius);
+      return;
+    }
+    const anglePerSlice = (2 * Math.PI) / entries.length;
+    entries.forEach((entry, i) => {
+      const startAngle = i * anglePerSlice;
+      const endAngle = startAngle + anglePerSlice;
+      ctx.beginPath();
+      ctx.moveTo(radius, radius);
+      ctx.arc(radius, radius, radius, startAngle, endAngle);
+      ctx.fillStyle = `hsl(${(i * 360) / entries.length}, 70%, 85%)`;
+      ctx.fill();
+      ctx.closePath();
+      if (winnerIndex === i && flash) {
+        ctx.beginPath();
+        ctx.moveTo(radius, radius);
+        ctx.arc(radius, radius, radius, startAngle, endAngle);
+        ctx.strokeStyle = "white";
+        ctx.lineWidth = 6;
+        ctx.stroke();
+        ctx.closePath();
+      }
+      ctx.save();
+      ctx.translate(radius, radius);
+      ctx.rotate(startAngle + anglePerSlice / 2);
+      ctx.font = `bold 22px Arial`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = "#000";
+      ctx.fillText(entry, radius * 0.6, 0);
+      ctx.restore();
     });
-    const data = await res.json();
-
-    if (!res.ok) return alert(data.message || "Invalid password");
-    setEntries([]);
-    setWinnerIndex(null);
-    setShowWinnerModal(false);
-    setFlash(false);
-  };
+  }, [entries, rotation, winnerIndex, flash]);
 
   return (
     <div
-      className="scale-wrapper"
       style={{
         position: "absolute",
         top: "50%",
@@ -170,37 +178,11 @@ export default function Home() {
       }}
     >
       <div className="container">
-        <h1
-          className="title"
-          style={{
-            fontFamily: "'ToothAndNail-Regular', Arial, sans-serif",
-            fontSize: "9.19em",
-          }}
-        >
-          Lolcow Reapers Gifted Member Wheel.
-        </h1>
+        <h1 className="title">Lolcow Reapers Gifted Member Wheel.</h1>
 
-        <div
-          style={{
-            position: "absolute",
-            bottom: "48px",
-            right: "24px",
-            background: "rgba(0,0,0,0.5)",
-            color: "#fff",
-            padding: "10px 14px",
-            borderRadius: "999px",
-            fontSize: "1em",
-          }}
-        >
-          {scrapeStatus === "live"
-            ? "🔴 Live"
-            : scrapeStatus === "upcoming"
-            ? "🟡 Upcoming"
-            : "⚫ Offline"}
-        </div>
+        <div className="subtitle-left">1 GIFTED{"\n"}={"\n"}1 Entry</div>
 
-        <div className="subtitle left-area">1 GIFTED = 1 Entry</div>
-        <div className="subtitle right-area">GIFTED ENTRIES: {entries.length}</div>
+        <div className="subtitle-right">GIFTED ENTRIES:{"\n"}{entries.length}</div>
 
         <div className="wheel-container">
           <canvas
@@ -216,28 +198,30 @@ export default function Home() {
         </div>
 
         <div className="controls">
-          <button className="spin-btn" onClick={spinWheel}>
-            Spin
-          </button>
-          <button className="clear-btn" onClick={clearEntries}>
-            Clear Wheel
-          </button>
+          <button className="spin-btn" onClick={spinWheel}>Spin</button>
         </div>
 
-        <footer style={{ marginTop: "20px", fontFamily: "Arial", fontSize: "1em" }}>
-          Developed By Shkrimpi - v1.1.2
-        </footer>
+        <div className="manual-entry">
+          <input type="text" placeholder="Enter name" disabled />
+          <input type="number" value={1} disabled />
+          <button disabled>Add Entry</button>
+          <button onClick={clearEntriesWithPassword} className="clear-btn">Clear Wheel</button>
+        </div>
+
+        <div className="scraper-status">{scrapeStatus}</div>
 
         {showWinnerModal && winnerIndex !== null && (
-          <div className="winner-overlay">
-            <div className="winner-box">
-              <img src="/grimreaper.png" alt="Grim Reaper" className="grim-swing" />
+          <div className="winner-modal">
+            <div className="winner-content">
+              <img src="/grimreaper.png" className="grim-swing" />
               <h2>💀 Winner! 💀</h2>
-              <p className="winner-name">{entries[winnerIndex]}</p>
+              <p>{entries[winnerIndex]}</p>
               <button onClick={() => setShowWinnerModal(false)}>Close</button>
             </div>
           </div>
         )}
+
+        <footer>Developed By Shkrimpi - v1.1.2</footer>
       </div>
     </div>
   );

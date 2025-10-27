@@ -1,186 +1,286 @@
-html, body {
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  background: black;
+/* ========== Fonts ========== */
+@font-face {
+  font-family: 'Tooth and Nail Regular';
+  src: url('/fonts/ToothAndNail-Regular.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
 }
 
-.scale-wrapper {
+/* Clean UI font for counters, labels, buttons */
+:root {
+  --ui-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+}
+
+/* Reset */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body, #__next { height: 100%; }
+body { background: #000; overflow: hidden; }
+
+/* ========== Layout ========== */
+.container {
+  width: 100%;
+  height: 100%;
   position: relative;
-  transform-origin: top left;
 }
 
+/* Title (matches Vercel look) */
 .title {
-  text-align: center;
-  color: white;
-  margin-top: 30px;
-  text-shadow: 2px 2px 6px rgba(0,0,0,0.7);
-}
-
-.subtitle {
   position: absolute;
-  font-family: 'ToothAndNail-Regular', Arial, sans-serif;
-  font-size: 5.25em;
-  color: white;
-  text-shadow: 1px 1px 4px rgba(0,0,0,0.7);
+  top: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Tooth and Nail Regular', Arial, sans-serif;
+  font-size: 9.19em;            /* same sizing as your Vercel version */
+  color: #fff;
+  text-align: center;
+  letter-spacing: 1px;
+  text-shadow: 0 4px 18px rgba(0,0,0,0.55);
+  user-select: none;
+  white-space: nowrap;
 }
 
-.subtitle.left-area {
+/* Left banner: "1 GIFTED = 1 Entry" */
+.subtitle-left {
+  position: absolute;
   left: 13.5%;
   top: 45%;
   transform: translateY(-50%);
-  text-align: center;
   white-space: pre-line;
+  text-align: center;
   line-height: 1.2;
+  font-family: 'Tooth and Nail Regular', Arial, sans-serif;
+  font-size: 5.25em;
+  color: #fff;
+  text-shadow: 1px 1px 4px rgba(0,0,0,0.7);
+  user-select: none;
 }
 
-.subtitle.right-area {
+/* Right banner: "GIFTED ENTRIES: N" */
+.subtitle-right {
+  position: absolute;
   right: 7.5%;
   top: 45%;
   transform: translateY(-50%);
-  text-align: center;
   white-space: pre-line;
+  text-align: center;
   line-height: 1.2;
+  font-family: 'Tooth and Nail Regular', Arial, sans-serif;
+  font-size: 5.25em;
+  color: #fff;
+  text-shadow: 1px 1px 4px rgba(0,0,0,0.7);
+  user-select: none;
 }
 
+/* Wheel */
 .wheel-container {
   position: absolute;
+  top: 50%;
   left: 50%;
-  top: 55%;
+  width: 600px;
+  height: 600px;
   transform: translate(-50%, -50%);
+  border-radius: 50%;
+  box-shadow: 0 10px 60px rgba(0,0,0,0.6);
+  background: rgba(0,0,0,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.spin-btn, .clear-btn {
-  padding: 12px 24px;
-  margin: 10px;
-  font-size: 1.15em;
-  font-family: Arial, sans-serif;
-  background-color: #fff;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-}
-
-.spin-btn:hover, .clear-btn:hover {
-  opacity: 0.9;
-}
-
+/* Controls row (Spin centered) */
 .controls {
   position: absolute;
   left: 50%;
-  bottom: 160px;
+  bottom: 170px;
   transform: translateX(-50%);
   display: flex;
-  flex-direction: row;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
 }
 
-footer {
-  text-align: center;
-  position: absolute;
-  bottom: 40px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-family: Arial, sans-serif;
-  font-size: 1.2em;
-  color: white;
+/* Buttons */
+.spin-btn,
+.clear-btn,
+.manual-entry button {
+  font-family: var(--ui-font);
+  font-weight: 700;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-size: 1.15em;
+  cursor: pointer;
+  transition: transform .06s ease, box-shadow .15s ease, opacity .15s ease;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
 }
 
-/* ✅ Manual Entry styles (still disabled right now, but preserved) */
+.spin-btn {
+  background: #22c55e; /* green */
+  color: #fff;
+}
+.spin-btn:hover { transform: translateY(-1px); }
+.spin-btn:active { transform: translateY(0px) scale(.98); }
+
+.clear-btn {
+  background: #ef4444; /* red */
+  color: #fff;
+}
+.clear-btn:hover { transform: translateY(-1px); }
+.clear-btn:active { transform: translateY(0px) scale(.98); }
+
+/* Manual entry group (disabled, but placed correctly) */
 .manual-entry {
   position: absolute;
   left: 50%;
-  bottom: 230px;
+  bottom: 98px;
   transform: translateX(-50%);
   display: flex;
-  flex-direction: column;
+  gap: 8px;
   align-items: center;
+  justify-content: center;
+  font-family: var(--ui-font);
 }
 
-.manual-entry input {
-  padding: 10px;
-  font-size: 1.1em;
-  border-radius: 8px;
-  border: 1px solid #ccc;
+.manual-entry input[type="text"],
+.manual-entry input[type="number"] {
+  width: 220px;
+  max-width: 240px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(0,0,0,0.45);
+  color: #eaeaea;
+  outline: none;
+  font-size: 1rem;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
 }
-
-.manual-entry button {
-  margin-top: 10px;
-  padding: 10px 20px;
-  font-size: 1.1em;
-  border: none;
-  border-radius: 8px;
-  background: #fff;
-  cursor: pointer;
+.manual-entry input[type="number"] {
+  width: 70px;
+  text-align: center;
 }
-
+.manual-entry input:disabled,
 .manual-entry button:disabled {
-  background: #aaa;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
-/* ✅ Winner Modal */
-.winner-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0,0,0,0.7);
-  display: flex;
-  justify-content: center;
+/* Scraper status badge (bottom-right) */
+.scraper-status {
+  position: absolute;
+  bottom: 34px; /* to edges per your request */
+  right: 24px;
+  display: inline-flex;
   align-items: center;
+  gap: 10px;
+  background: rgba(0,0,0,0.55);
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-family: var(--ui-font);
+  font-size: 0.95em;
+  font-weight: 600;
+  backdrop-filter: blur(2px);
+  border: 1px solid rgba(255,255,255,0.12);
+  user-select: none;
+}
+
+/* Winner modal */
+.winner-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   z-index: 9999;
 }
 
-.winner-box {
-  background-color: #fff;
+.winner-content {
+  background: #fff;
   padding: 43px 72px;
   border-radius: 21px;
   text-align: center;
   box-shadow: 0 0 30px rgba(0,0,0,0.5);
   transform: scale(0);
   animation: popBounce 0.5s forwards;
+  max-width: 85vw;
 }
 
-.winner-box img {
-  width: 120px;
-  margin-bottom: 20px;
+.winner-content h2 {
+  font-family: var(--ui-font);
+  font-size: 2em;
+  margin-top: 8px;
 }
-
-.winner-name {
+.winner-content p {
+  font-family: 'Tooth and Nail Regular', Arial, sans-serif;
   font-size: 3.6em;
-  margin: 30px 0;
-  font-family: 'ToothAndNail-Regular', Arial, sans-serif;
   font-weight: bold;
+  margin: 30px 0;
   animation: textBounce 0.6s ease forwards;
+  word-break: break-word;
 }
 
-.winner-box button {
+.winner-content button {
+  font-family: var(--ui-font);
   padding: 14px 28px;
-  font-size: 1.4em;
+  font-size: 1.2em;
   border-radius: 11px;
   cursor: pointer;
+  border: none;
+  background: #111827;
+  color: #fff;
 }
 
+/* Grim Reaper swing */
+.grim-swing {
+  width: 120px;
+  margin-bottom: 20px;
+  animation: swing 1.2s ease-in-out infinite;
+  transform-origin: top center;
+}
+
+/* Footer */
+footer {
+  position: absolute;
+  left: 50%;
+  bottom: 12px; /* to edges per your request */
+  transform: translateX(-50%);
+  color: #ddd;
+  font-family: var(--ui-font);
+  font-size: 0.95rem;
+  opacity: 0.9;
+  text-align: center;
+  user-select: none;
+  white-space: nowrap;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+}
+
+/* ========== Animations ========== */
+@keyframes swing {
+  0% { transform: rotate(-10deg); }
+  50% { transform: rotate(10deg); }
+  100% { transform: rotate(-10deg); }
+}
 @keyframes popBounce {
   0% { transform: scale(0); opacity: 0; }
   60% { transform: scale(1.2); opacity: 1; }
   100% { transform: scale(1); }
 }
-
 @keyframes textBounce {
   0% { transform: scale(0); opacity: 0; }
   60% { transform: scale(1.3); opacity: 1; }
   100% { transform: scale(1); }
 }
 
-@keyframes swing {
-  0% { transform: rotate(-10deg); }
-  50% { transform: rotate(10deg); }
-  100% { transform: rotate(-10deg); }
+/* ========== Small safety tweaks for odd screens ========== */
+@media (max-width: 1500px) {
+  .title { font-size: 7.5em; }
+  .subtitle-left, .subtitle-right { font-size: 4.3em; }
 }
-
-.grim-swing {
-  animation: swing 1.2s ease-in-out infinite;
-  transform-origin: top center;
+@media (max-width: 1200px) {
+  .title { font-size: 6.2em; }
+  .subtitle-left, .subtitle-right { font-size: 3.6em; }
 }
