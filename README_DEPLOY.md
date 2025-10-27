@@ -1,10 +1,37 @@
-# Gift Wheel - Scraper Deployment Guide
+# 🎡 Gifted Membership Wheel (Scraper + UI)
 
-## 1. Prerequisites
-- Ubuntu VPS (Hetzner, DigitalOcean, etc.)
-- Node.js 18 or 20
+A two-part app that scrapes YouTube live chats for gifted membership events from a specific channel and displays them in a spinning reward wheel.
+
+---
+
+## 📁 Project Structure
+project-root/
+│
+├─ gift-scraper/ # Scrapes YouTube live chat for gifts
+│ └─ scraper.js
+│
+├─ gift-wheel-ui/ # Frontend spinning wheel UI
+│ └─ (Next.js code here)
+│
+├─ ecosystem.config.js # PM2 process config
+└─ README.md
+
+---
+
+## ✅ Requirements
+
+- VPS (Ubuntu 22.04 recommended)
+- Node.js 18+
 - PM2 installed globally
-- Redis via Upstash (or other)
+- Nginx (optional but recommended)
 
-## 2. Environment Variables
-Create `.env` based on `.env.example`:
+---
+
+## 📦 Install Dependencies (First-Time Setup)
+
+```bash
+cd gift-scraper
+npm install
+
+cd ../gift-wheel-ui
+npm install
