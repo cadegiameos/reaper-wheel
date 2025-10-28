@@ -6,13 +6,13 @@ import { loadEntries } from "./storage.js";
 const app = express();
 const PORT = process.env.SCRAPER_PORT || 3001;
 
-// ✅ Endpoint to get entries
+// ✅ API endpoint to get entries
 app.get("/entries", async (req, res) => {
   const entries = await loadEntries();
   res.json({ entries });
 });
 
-// ✅ Endpoint to clear entries (simple password)
+// ✅ Optional: clear entries (simple password-protected)
 app.delete("/entries", async (req, res) => {
   const password = req.query.password;
   if (password !== "2FD1F4AC3897") {
