@@ -4,32 +4,17 @@
   font-display: swap;
 }
 
-/* Fill screen & stretch background */
 html, body {
   margin: 0;
   padding: 0;
   width: 100%;
   height: 100%;
+  background: #000 url('/background.jpg') center center / cover no-repeat;
   overflow: hidden;
-  background-color: #000;
-  background-image: url('/background.jpg');
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;       /* ✅ removes side columns */
   color: #fff;
   font-family: Arial, sans-serif;
 }
 
-/* Wrapper fills viewport */
-.scale-wrapper {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-}
-
-/* Container */
 .container {
   position: relative;
   width: 100%;
@@ -57,10 +42,10 @@ html, body {
   color: white;
   text-shadow: 1px 1px 4px rgba(0,0,0,0.7);
 }
+
 .left-sub { left: 13.5%; }
 .right-sub { right: 7.5%; }
 
-/* Wheel centered correctly */
 .wheel-container {
   position: absolute;
   top: 52%;
@@ -71,14 +56,12 @@ html, body {
   z-index: 1;
 }
 
-/* Buttons */
 .controls {
   display: flex;
   justify-content: center;
   margin-top: 20px;
 }
 
-/* ✅ Correct colours and hover states */
 .spin-btn {
   background: #4caf50;
   color: white;
@@ -88,7 +71,7 @@ html, body {
   padding: 12px 24px;
   font-size: 1.15em;
   transition: background 0.3s ease, transform 0.1s ease;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+  box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
 }
 .spin-btn:hover { background: #6bd66b; transform: scale(1.05); }
 
@@ -101,11 +84,10 @@ html, body {
   padding: 12px 24px;
   font-size: 1.15em;
   transition: background 0.3s ease, transform 0.1s ease;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+  box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
 }
 .clear-btn:hover { background: #ff6659; transform: scale(1.05); }
 
-/* Manual entry below wheel */
 .manual-entry {
   display: flex;
   flex-direction: column;
@@ -123,7 +105,6 @@ input {
 }
 button:disabled { opacity: 0.6; cursor: not-allowed; }
 
-/* Scraper notifier bottom-right */
 .scraper-status {
   position: absolute;
   bottom: 90px;
@@ -137,7 +118,6 @@ button:disabled { opacity: 0.6; cursor: not-allowed; }
   font-weight: 600;
 }
 
-/* ✅ Footer restored */
 footer {
   position: absolute;
   bottom: 15px;

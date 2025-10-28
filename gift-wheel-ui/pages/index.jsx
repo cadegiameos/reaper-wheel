@@ -14,13 +14,10 @@ export default function Home() {
 
   const canvasRef = useRef(null);
 
-  // Handle responsive scaling (maintains correct proportions)
   useEffect(() => {
     const handleResize = () => {
-      const baseW = 1920;
-      const baseH = 1080;
-      const scaleX = window.innerWidth / baseW;
-      const scaleY = window.innerHeight / baseH;
+      const scaleX = window.innerWidth / 1920;
+      const scaleY = window.innerHeight / 1080;
       setScale(Math.min(scaleX, scaleY));
     };
     handleResize();
@@ -28,7 +25,6 @@ export default function Home() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Auto-refresh entries every 3–5 seconds
   useEffect(() => {
     let isMounted = true;
     const loadEntries = async () => {
@@ -48,7 +44,6 @@ export default function Home() {
     };
   }, []);
 
-  // Poll scraper status
   useEffect(() => {
     const pollStatus = async () => {
       try {
@@ -105,7 +100,6 @@ export default function Home() {
     } catch {}
   };
 
-  // Gentle idle spin
   useEffect(() => {
     const interval = setInterval(() => {
       if (!isSpinning) setRotation((prev) => (prev + 0.1) % 360);
@@ -113,15 +107,13 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [isSpinning]);
 
-  // Flash winner highlight
   useEffect(() => {
     if (winnerIndex !== null) {
-      const flashInterval = setInterval(() => setFlash((p) => !p), 500);
+      const flashInterval = setInterval(() => setFlash((prev) => !prev), 500);
       return () => clearInterval(flashInterval);
     }
   }, [winnerIndex]);
 
-  // Draw wheel
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -201,12 +193,12 @@ export default function Home() {
       className="scale-wrapper"
       style={{
         position: "fixed",
-        top: "50%",
-        left: "50%",
-        transform: `translate(-50%, -50%) scale(${scale})`,
+        top: "0",
+        left: "0",
+        width: "100vw",
+        height: "100vh",
+        transform: `scale(${scale})`,
         transformOrigin: "center",
-        width: "1920px",
-        height: "1080px",
         backgroundImage: "url('/background.jpg')",
         backgroundSize: "cover",
         backgroundPosition: "center",
@@ -214,26 +206,17 @@ export default function Home() {
       }}
     >
       <div className="container">
-        <h1 className="title">
-          Lolcow Reapers Gifted Member Wheel.
-        </h1>
+        <h1 className="title">Lolcow Reapers Gifted Member Wheel.</h1>
 
-        {/* Left side text */}
-        <div
-          className="subtitle left-sub"
-        >
+        <div className="subtitle left-sub">
           1 GIFTED{"\n"}={"\n"}1 Entry
         </div>
 
-        {/* Right side text */}
-        <div
-          className="subtitle right-sub"
-        >
+        <div className="subtitle right-sub">
           GIFTED ENTRIES:{"\n"}
           {entries.length}
         </div>
 
-        {/* Wheel */}
         <div className="wheel-container">
           <canvas
             ref={canvasRef}
@@ -247,11 +230,8 @@ export default function Home() {
           />
         </div>
 
-        {/* Buttons */}
         <div className="controls">
-          <button className="spin-btn" onClick={spinWheel}>
-            Spin
-          </button>
+          <button className="spin-btn" onClick={spinWheel}>Spin</button>
         </div>
 
         <div className="manual-entry">
@@ -265,12 +245,8 @@ export default function Home() {
           </button>
         </div>
 
-        {/* Scraper notifier */}
-        <div className="scraper-status">
-          {scraperStatus}
-        </div>
+        <div className="scraper-status">{scraperStatus}</div>
 
-        {/* Winner modal */}
         {showWinnerModal && winnerIndex !== null && (
           <div className="winner-overlay">
             <div className="winner-box">
@@ -293,16 +269,6 @@ export default function Home() {
           .grim-swing {
             animation: swing 1.2s ease-in-out infinite;
             transform-origin: top center;
-          }
-          @keyframes popBounce {
-            0% { transform: scale(0); opacity: 0; }
-            60% { transform: scale(1.2); opacity: 1; }
-            100% { transform: scale(1); }
-          }
-          @keyframes textBounce {
-            0% { transform: scale(0); opacity: 0; }
-            60% { transform: scale(1.3); opacity: 1; }
-            100% { transform: scale(1); }
           }
         `}</style>
       </div>
