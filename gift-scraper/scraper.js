@@ -5,7 +5,7 @@ import fs from "fs";
 import path from "path";
 
 const CHANNEL_ID = process.env.CHANNEL_ID; // e.g. UCRh4qe6HGD10ZsyG56eUdHA
-const POLL_INTERVAL = 10000; // 10 seconds
+const POLL_INTERVAL = 5000; // 5 seconds
 
 // Storage for processed message IDs to avoid duplicates
 const PROCESSED_FILE = path.resolve("storage/processed.json");
