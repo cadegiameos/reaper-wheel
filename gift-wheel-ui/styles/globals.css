@@ -4,7 +4,7 @@
   font-display: swap;
 }
 
-/* Full-page baseline */
+/* Fullscreen base + background */
 html, body {
   margin: 0;
   padding: 0;
@@ -13,20 +13,16 @@ html, body {
   overflow: hidden;
   color: #fff;
   font-family: Arial, sans-serif;
-  background: #000;
+  background: #000 url('/background.jpg') center center / cover no-repeat fixed; /* ✅ full-bleed bg */
 }
 
-/* ✅ FIX: Background now covers 100% of screen with no borders */
-body::before {
-  content: "";
+/* Root container (no transforms here) */
+.app-root {
   position: fixed;
   inset: 0;
-  background: url('/background.jpg') center center / cover no-repeat;
-  background-attachment: fixed;
-  z-index: -1; /* stays behind everything */
 }
 
-/* Main container keeps layout intact */
+/* Everything lives inside the 1920x1080 frame (scaled in JSX) */
 .container {
   position: relative;
   width: 100%;
@@ -36,14 +32,14 @@ body::before {
 
 /* Title */
 .title {
-  text-align: center;
-  color: white;
-  margin-top: 40px;
-  text-shadow: 3px 3px 8px rgba(0, 0, 0, 0.7);
   font-family: 'Tooth and Nail Regular', Arial, sans-serif;
+  font-size: 9.2em;
+  color: white;
+  text-shadow: 3px 3px 8px rgba(0,0,0,0.7);
+  margin-top: 40px;
 }
 
-/* Subtitles */
+/* Side subtitles */
 .subtitle {
   position: absolute;
   top: 45%;
@@ -52,37 +48,34 @@ body::before {
   text-align: center;
   line-height: 1.2;
   font-family: 'Tooth and Nail Regular', Arial, sans-serif;
+  font-size: 5.25em;
   color: white;
   text-shadow: 1px 1px 4px rgba(0,0,0,0.7);
 }
+.subtitle.left { left: 13.5%; }
+.subtitle.right { right: 7.5%; }
 
-.subtitle.left {
-  left: 13.5%;
-  font-size: 5.25em;
-}
-
-.subtitle.right {
-  right: 7.5%;
-  font-size: 5.25em;
-}
-
-/* Wheel in correct position */
-.wheel-container {
+/* Center stack: wheel → spin → inputs → clear */
+.wheel-stack {
   position: absolute;
-  top: 52%;
+  top: 60%;            /* tuned to sit above footer; adjust 58–62% if desired */
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 600px;
-  height: 600px;
-  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  z-index: 2;
 }
 
-/* Buttons layout restored */
-.controls {
-  display: flex;
-  justify-content: center;
-  margin-top: 20px;
+/* Wheel canvas box */
+.wheel-container {
+  width: 600px;
+  height: 600px;
 }
+
+/* Buttons */
+.controls { display: flex; justify-content: center; }
 
 .spin-btn {
   background: #4caf50;
@@ -90,16 +83,12 @@ body::before {
   border: none;
   border-radius: 10px;
   cursor: pointer;
-  transition: background 0.3s ease, transform 0.1s ease;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
   padding: 12px 24px;
   font-size: 1.15em;
+  transition: background 0.3s ease, transform 0.1s ease;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
-
-.spin-btn:hover {
-  background: #6bd66b;
-  transform: scale(1.05);
-}
+.spin-btn:hover { background: #6bd66b; transform: scale(1.05); }
 
 .clear-btn {
   background: #f44336;
@@ -107,41 +96,32 @@ body::before {
   border: none;
   border-radius: 10px;
   cursor: pointer;
-  transition: background 0.3s ease, transform 0.1s ease;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
   padding: 12px 24px;
   font-size: 1.15em;
-  margin-top: 10px;
+  transition: background 0.3s ease, transform 0.1s ease;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  margin-top: 6px;
 }
+.clear-btn:hover { background: #ff6659; transform: scale(1.05); }
 
-.clear-btn:hover {
-  background: #ff6659;
-  transform: scale(1.05);
-}
-
-/* Manual entry form under buttons */
+/* Manual entry */
 .manual-entry {
   display: flex;
   flex-direction: column;
   align-items: center;
   color: #ddd;
-  margin-top: 20px;
+  gap: 6px;
 }
-
 input {
   border: 2px solid #888;
   border-radius: 6px;
   padding: 6px 10px;
   background: #222;
-  color: white;
+  color: #fff;
 }
+button:disabled { opacity: 0.6; cursor: not-allowed; }
 
-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* Scraper bubble bottom-right */
+/* Scraper pill */
 .scraper-status {
   position: absolute;
   bottom: 90px;
@@ -155,7 +135,7 @@ button:disabled {
   font-weight: 600;
 }
 
-/* Footer restored */
+/* Footer */
 footer {
   position: absolute;
   bottom: 15px;
@@ -166,34 +146,17 @@ footer {
   text-shadow: 1px 1px 4px rgba(0,0,0,0.7);
 }
 
-/* Responsive adjustments */
+/* Responsive text tweaks */
 @media (max-width: 1600px) {
-  .title {
-    font-size: 6em !important;
-  }
-  .subtitle {
-    font-size: 3.5em !important;
-  }
+  .title { font-size: 6em !important; }
+  .subtitle { font-size: 3.5em !important; }
 }
-
 @media (max-width: 1200px) {
-  .title {
-    font-size: 4.5em !important;
-  }
-  .subtitle {
-    font-size: 3em !important;
-  }
+  .title { font-size: 4.5em !important; }
+  .subtitle { font-size: 3em !important; }
 }
-
 @media (max-width: 900px) {
-  .title {
-    font-size: 3.5em !important;
-  }
-  .subtitle {
-    font-size: 2em !important;
-  }
-  canvas {
-    width: 400px !important;
-    height: 400px !important;
-  }
+  .title { font-size: 3.5em !important; }
+  .subtitle { font-size: 2em !important; }
+  canvas { width: 400px !important; height: 400px !important; }
 }

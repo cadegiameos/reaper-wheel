@@ -14,63 +14,55 @@ export default function Home() {
 
   const canvasRef = useRef(null);
 
-  // Handle scaling
+  // compute scale vs 1920x1080 reference frame
   useEffect(() => {
     const handleResize = () => {
-      const scaleX = window.innerWidth / 1920;
-      const scaleY = window.innerHeight / 1080;
-      setScale(Math.min(scaleX, scaleY));
+      const sx = window.innerWidth / 1920;
+      const sy = window.innerHeight / 1080;
+      setScale(Math.min(sx, sy));
     };
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Auto-refresh entries every 3–5 seconds
+  // refresh entries every 3–5s
   useEffect(() => {
-    let isMounted = true;
-
-    const loadEntries = async () => {
+    let mounted = true;
+    const load = async () => {
       try {
         const res = await fetch("/api/entries");
         const data = await res.json();
-        if (isMounted && Array.isArray(data.entries)) setEntries(data.entries);
-      } catch (err) {
-        console.error("Error refreshing entries:", err);
+        if (mounted && Array.isArray(data.entries)) setEntries(data.entries);
+      } catch (e) {
+        console.error("Error refreshing entries:", e);
       }
     };
-
-    loadEntries();
-    const interval = setInterval(loadEntries, 3000 + Math.random() * 2000);
-    return () => {
-      isMounted = false;
-      clearInterval(interval);
-    };
+    load();
+    const i = setInterval(load, 3000 + Math.random() * 2000);
+    return () => { mounted = false; clearInterval(i); };
   }, []);
 
-  // Poll scraper status
+  // scraper status
   useEffect(() => {
-    const pollStatus = async () => {
+    const poll = async () => {
       try {
         const res = await fetch("/api/check-youtube");
         const data = await res.json();
         setScraperStatus(
-          data.status === "live"
-            ? "🟢 Live"
-            : data.status === "upcoming"
-            ? "🟡 Upcoming"
-            : "🔴 Offline"
+          data.status === "live" ? "🟢 Live" :
+          data.status === "upcoming" ? "🟡 Upcoming" :
+          "🔴 Offline"
         );
       } catch {
         setScraperStatus("🔴 Offline");
       }
     };
-    pollStatus();
-    const interval = setInterval(pollStatus, 10000);
-    return () => clearInterval(interval);
+    poll();
+    const i = setInterval(poll, 10000);
+    return () => clearInterval(i);
   }, []);
 
-  // Add entry
   const addEntry = async () => {
     const trimmed = name.trim();
     if (!trimmed || amount < 1) return;
@@ -89,7 +81,6 @@ export default function Home() {
     } catch {}
   };
 
-  // Clear entries (password protected)
   const clearEntries = async () => {
     const password = prompt("Enter password to clear wheel:");
     if (password !== "2FD1F4AC3897") {
@@ -107,23 +98,23 @@ export default function Home() {
     } catch {}
   };
 
-  // Idle rotation
+  // idle drift
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (!isSpinning) setRotation((prev) => (prev + 0.1) % 360);
+    const i = setInterval(() => {
+      if (!isSpinning) setRotation((p) => (p + 0.1) % 360);
     }, 20);
-    return () => clearInterval(interval);
+    return () => clearInterval(i);
   }, [isSpinning]);
 
-  // Flash winner
+  // flash winner arc
   useEffect(() => {
     if (winnerIndex !== null) {
-      const flashInterval = setInterval(() => setFlash((p) => !p), 500);
-      return () => clearInterval(flashInterval);
+      const i = setInterval(() => setFlash((p) => !p), 500);
+      return () => clearInterval(i);
     }
   }, [winnerIndex]);
 
-  // Draw wheel
+  // draw wheel
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -136,19 +127,20 @@ export default function Home() {
       ctx.fillStyle = "white";
       ctx.font = "20px Arial";
       ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
       ctx.fillText("No entries yet", radius, radius);
       return;
     }
 
-    const anglePerSlice = (2 * Math.PI) / entries.length;
+    const anglePer = (2 * Math.PI) / entries.length;
 
     entries.forEach((entry, i) => {
-      const startAngle = i * anglePerSlice;
-      const endAngle = startAngle + anglePerSlice;
+      const start = i * anglePer;
+      const end = start + anglePer;
 
       ctx.beginPath();
       ctx.moveTo(radius, radius);
-      ctx.arc(radius, radius, radius, startAngle, endAngle);
+      ctx.arc(radius, radius, radius, start, end);
       ctx.fillStyle = `hsl(${(i * 360) / entries.length}, 70%, 85%)`;
       ctx.fill();
       ctx.closePath();
@@ -156,7 +148,7 @@ export default function Home() {
       if (winnerIndex === i && flash) {
         ctx.beginPath();
         ctx.moveTo(radius, radius);
-        ctx.arc(radius, radius, radius, startAngle, endAngle);
+        ctx.arc(radius, radius, radius, start, end);
         ctx.strokeStyle = "white";
         ctx.lineWidth = 6;
         ctx.stroke();
@@ -165,23 +157,20 @@ export default function Home() {
 
       ctx.save();
       ctx.translate(radius, radius);
-      ctx.rotate(startAngle + anglePerSlice / 2);
-
-      const sliceWidth = radius * anglePerSlice;
+      ctx.rotate(start + anglePer / 2);
+      const sliceWidth = radius * anglePer;
       let fontSize = Math.min(40, sliceWidth / entry.length);
       fontSize = Math.max(fontSize, 10);
       ctx.font = `bold ${fontSize}px Arial`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillStyle = "#000";
-
-      const textRadius = radius * 0.6;
-      ctx.fillText(entry, textRadius, 0);
+      const textR = radius * 0.6;
+      ctx.fillText(entry, textR, 0);
       ctx.restore();
     });
   }, [entries, rotation, winnerIndex, flash]);
 
-  // Spin
   const spinWheel = () => {
     if (entries.length === 0) return alert("No entries to spin!");
     setIsSpinning(true);
@@ -201,167 +190,130 @@ export default function Home() {
   };
 
   return (
-    <>
-      {/* Fixed full background */}
-      <div className="scale-wrapper"></div>
-
-      {/* Main UI container */}
+    <div className="app-root">
+      {/* 1920x1080 frame that we center + scale */}
       <div
-        className="container"
+        className="frame"
         style={{
-          position: "relative",
-          width: "100%",
-          height: "100%",
-          zIndex: 1,
-          transform: `scale(${scale})`,
-          transformOrigin: "center",
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          width: "1920px",
+          height: "1080px",
+          transform: `translate(-50%, -50%) scale(${scale})`,
+          transformOrigin: "top left",
         }}
       >
-        <h1
-          className="title"
-          style={{
-            fontFamily: "'Tooth and Nail Regular', Arial, sans-serif",
-            fontSize: "9.19em",
-          }}
-        >
-          Lolcow Reapers Gifted Member Wheel.
-        </h1>
+        <div className="container">
+          <h1 className="title" style={{ fontSize: "9.19em" }}>
+            Lolcow Reapers Gifted Member Wheel.
+          </h1>
 
-        <div
-          className="subtitle left-sub"
-          style={{ left: "13.5%" }}
-        >
-          1 GIFTED{"\n"}={"\n"}1 Entry
-        </div>
-
-        <div
-          className="subtitle right-sub"
-          style={{ right: "7.5%" }}
-        >
-          GIFTED ENTRIES:{"\n"}
-          {entries.length}
-        </div>
-
-        <div
-          className="wheel-stack"
-          style={{
-            top: "53%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-          }}
-        >
-          <div className="wheel-container">
-            <canvas
-              ref={canvasRef}
-              width={600}
-              height={600}
-              style={{
-                transform: `rotate(${rotation}deg)`,
-                transition: isSpinning ? "transform 5s ease-out" : "none",
-                borderRadius: "50%",
-              }}
-            />
+          {/* side captions */}
+          <div className="subtitle left">1 GIFTED{"\n"}={"\n"}1 Entry</div>
+          <div className="subtitle right">
+            GIFTED ENTRIES:{"\n"}{entries.length}
           </div>
 
-          <div className="controls">
-            <button className="spin-btn" onClick={spinWheel}>
-              Spin
-            </button>
-          </div>
-
-          <div className="manual-entry">
-            <div style={{ display: "flex", gap: "5px", justifyContent: "center" }}>
-              <input
-                type="text"
-                placeholder="Enter name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && addEntry()}
-                disabled
+          {/* center stack: wheel -> spin -> inputs -> clear */}
+          <div className="wheel-stack">
+            <div className="wheel-container">
+              <canvas
+                ref={canvasRef}
+                width={600}
+                height={600}
+                style={{
+                  transform: `rotate(${rotation}deg)`,
+                  transition: isSpinning ? "transform 5s ease-out" : "none",
+                  borderRadius: "50%",
+                }}
               />
-              <input
-                type="number"
-                min="1"
-                max="20"
-                value={amount}
-                onChange={(e) => setAmount(parseInt(e.target.value))}
-                style={{ width: "50px" }}
-                disabled
-              />
-              <button onClick={addEntry} disabled>
-                Add Entry
-              </button>
             </div>
 
-            <button className="clear-btn" onClick={clearEntries}>
-              Clear Wheel
-            </button>
+            <div className="controls">
+              <button className="spin-btn" onClick={spinWheel}>Spin</button>
+            </div>
+
+            <div className="manual-entry">
+              <div style={{ display: "flex", gap: "5px", justifyContent: "center" }}>
+                <input type="text" placeholder="Enter name" disabled />
+                <input type="number" min="1" max="20" value={amount} readOnly disabled />
+                <button disabled>Add Entry</button>
+              </div>
+              <button className="clear-btn" onClick={clearEntries}>Clear Wheel</button>
+            </div>
           </div>
-        </div>
 
-        <div className="scraper-status">{scraperStatus}</div>
+          {/* scraper pill */}
+          <div className="scraper-status">{scraperStatus}</div>
 
-        {showWinnerModal && winnerIndex !== null && (
-          <div
-            style={{
-              position: "fixed",
-              top: 0,
-              left: 0,
-              width: "100%",
-              height: "100%",
-              backgroundColor: "rgba(0,0,0,0.7)",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              zIndex: 9999,
-            }}
-          >
+          {/* winner modal */}
+          {showWinnerModal && winnerIndex !== null && (
             <div
               style={{
-                backgroundColor: "#fff",
-                padding: "43px 72px",
-                borderRadius: "21px",
-                textAlign: "center",
-                boxShadow: "0 0 30px rgba(0,0,0,0.5)",
-                transform: "scale(0)",
-                animation: "popBounce 0.5s forwards",
+                position: "fixed",
+                inset: 0,
+                backgroundColor: "rgba(0,0,0,0.7)",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                zIndex: 9999,
               }}
             >
-              <img
-                src="/grimreaper.png"
-                alt="Grim Reaper"
-                className="grim-swing"
-                style={{ width: "120px", marginBottom: "20px" }}
-              />
-              <h2 style={{ fontSize: "2em" }}>💀 Winner! 💀</h2>
-              <p
+              <div
                 style={{
-                  fontSize: "3.6em",
-                  margin: "30px 0",
-                  fontFamily: "'Tooth and Nail Regular', Arial, sans-serif",
-                  fontWeight: "bold",
-                  animation: "textBounce 0.6s ease forwards",
+                  backgroundColor: "#fff",
+                  padding: "43px 72px",
+                  borderRadius: "21px",
+                  textAlign: "center",
+                  boxShadow: "0 0 30px rgba(0,0,0,0.5)",
+                  transform: "scale(0)",
+                  animation: "popBounce 0.5s forwards",
                 }}
               >
-                {entries[winnerIndex]}
-              </p>
-              <button
-                onClick={() => setShowWinnerModal(false)}
-                style={{
-                  padding: "14px 28px",
-                  fontSize: "1.4em",
-                  borderRadius: "11px",
-                  cursor: "pointer",
-                }}
-              >
-                Close
-              </button>
+                <img
+                  src="/grimreaper.png"
+                  alt="Grim Reaper"
+                  className="grim-swing"
+                  style={{ width: "120px", marginBottom: "20px" }}
+                />
+                <h2 style={{ fontSize: "2em" }}>💀 Winner! 💀</h2>
+                <p
+                  style={{
+                    fontSize: "3.6em",
+                    margin: "30px 0",
+                    fontFamily: "'Tooth and Nail Regular', Arial, sans-serif",
+                    fontWeight: "bold",
+                    animation: "textBounce 0.6s ease forwards",
+                  }}
+                >
+                  {entries[winnerIndex]}
+                </p>
+                <button
+                  onClick={() => setShowWinnerModal(false)}
+                  style={{ padding: "14px 28px", fontSize: "1.4em", borderRadius: "11px", cursor: "pointer" }}
+                >
+                  Close
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        <footer>Developed By Shkrimpi - v1.1.2</footer>
+          <style jsx>{`
+            @keyframes swing {
+              0% { transform: rotate(-10deg); }
+              50% { transform: rotate(10deg); }
+              100% { transform: rotate(-10deg); }
+            }
+            .grim-swing {
+              animation: swing 1.2s ease-in-out infinite;
+              transform-origin: top center;
+            }
+          `}</style>
+
+          <footer>Developed By Shkrimpi - v1.1.2</footer>
+        </div>
       </div>
-    </>
+    </div>
   );
 }
