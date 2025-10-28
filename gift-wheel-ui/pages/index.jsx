@@ -14,55 +14,48 @@ export default function Home() {
 
   const canvasRef = useRef(null);
 
+  // responsive scale based on 1920x1080 design
   useEffect(() => {
     const handleResize = () => {
-      const scaleX = window.innerWidth / 1920;
-      const scaleY = window.innerHeight / 1080;
-      setScale(Math.min(scaleX, scaleY));
+      const sx = window.innerWidth / 1920;
+      const sy = window.innerHeight / 1080;
+      setScale(Math.min(sx, sy));
     };
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // auto-refresh entries every 3–5s
   useEffect(() => {
-    let isMounted = true;
+    let mounted = true;
     const loadEntries = async () => {
       try {
         const res = await fetch("/api/entries");
         const data = await res.json();
-        if (isMounted && Array.isArray(data.entries)) setEntries(data.entries);
-      } catch (err) {
-        console.error("Error refreshing entries:", err);
-      }
+        if (mounted && Array.isArray(data.entries)) setEntries(data.entries);
+      } catch (e) { console.error("Error refreshing entries:", e); }
     };
     loadEntries();
-    const interval = setInterval(loadEntries, 3000 + Math.random() * 2000);
-    return () => {
-      isMounted = false;
-      clearInterval(interval);
-    };
+    const i = setInterval(loadEntries, 3000 + Math.random() * 2000);
+    return () => { mounted = false; clearInterval(i); };
   }, []);
 
+  // scraper status
   useEffect(() => {
-    const pollStatus = async () => {
+    const poll = async () => {
       try {
         const res = await fetch("/api/check-youtube");
         const data = await res.json();
         setScraperStatus(
-          data.status === "live"
-            ? "🟢 Live"
-            : data.status === "upcoming"
-            ? "🟡 Upcoming"
-            : "🔴 Offline"
+          data.status === "live" ? "🟢 Live" :
+          data.status === "upcoming" ? "🟡 Upcoming" : "🔴 Offline"
         );
-      } catch {
-        setScraperStatus("🔴 Offline");
-      }
+      } catch { setScraperStatus("🔴 Offline"); }
     };
-    pollStatus();
-    const interval = setInterval(pollStatus, 10000);
-    return () => clearInterval(interval);
+    poll();
+    const i = setInterval(poll, 10000);
+    return () => clearInterval(i);
   }, []);
 
   const addEntry = async () => {
@@ -100,20 +93,23 @@ export default function Home() {
     } catch {}
   };
 
+  // idle drift
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (!isSpinning) setRotation((prev) => (prev + 0.1) % 360);
+    const i = setInterval(() => {
+      if (!isSpinning) setRotation((p) => (p + 0.1) % 360);
     }, 20);
-    return () => clearInterval(interval);
+    return () => clearInterval(i);
   }, [isSpinning]);
 
+  // flash winner ring
   useEffect(() => {
     if (winnerIndex !== null) {
-      const flashInterval = setInterval(() => setFlash((prev) => !prev), 500);
-      return () => clearInterval(flashInterval);
+      const i = setInterval(() => setFlash((p) => !p), 500);
+      return () => clearInterval(i);
     }
   }, [winnerIndex]);
 
+  // draw wheel
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -131,15 +127,15 @@ export default function Home() {
       return;
     }
 
-    const anglePerSlice = (2 * Math.PI) / entries.length;
+    const anglePer = (2 * Math.PI) / entries.length;
 
     entries.forEach((entry, i) => {
-      const startAngle = i * anglePerSlice;
-      const endAngle = startAngle + anglePerSlice;
+      const start = i * anglePer;
+      const end = start + anglePer;
 
       ctx.beginPath();
       ctx.moveTo(radius, radius);
-      ctx.arc(radius, radius, radius, startAngle, endAngle);
+      ctx.arc(radius, radius, radius, start, end);
       ctx.fillStyle = `hsl(${(i * 360) / entries.length}, 70%, 85%)`;
       ctx.fill();
       ctx.closePath();
@@ -147,7 +143,7 @@ export default function Home() {
       if (winnerIndex === i && flash) {
         ctx.beginPath();
         ctx.moveTo(radius, radius);
-        ctx.arc(radius, radius, radius, startAngle, endAngle);
+        ctx.arc(radius, radius, radius, start, end);
         ctx.strokeStyle = "white";
         ctx.lineWidth = 6;
         ctx.stroke();
@@ -156,16 +152,16 @@ export default function Home() {
 
       ctx.save();
       ctx.translate(radius, radius);
-      ctx.rotate(startAngle + anglePerSlice / 2);
-      const sliceWidth = radius * anglePerSlice;
+      ctx.rotate(start + anglePer / 2);
+      const sliceWidth = radius * anglePer;
       let fontSize = Math.min(40, sliceWidth / entry.length);
       fontSize = Math.max(fontSize, 10);
       ctx.font = `bold ${fontSize}px Arial`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillStyle = "#000";
-      const textRadius = radius * 0.6;
-      ctx.fillText(entry, textRadius, 0);
+      const textR = radius * 0.6;
+      ctx.fillText(entry, textR, 0);
       ctx.restore();
     });
   }, [entries, rotation, winnerIndex, flash]);
@@ -193,8 +189,8 @@ export default function Home() {
       className="scale-wrapper"
       style={{
         position: "fixed",
-        top: "0",
-        left: "0",
+        top: 0,
+        left: 0,
         width: "100vw",
         height: "100vh",
         transform: `scale(${scale})`,
@@ -208,52 +204,67 @@ export default function Home() {
       <div className="container">
         <h1 className="title">Lolcow Reapers Gifted Member Wheel.</h1>
 
-        <div className="subtitle left-sub">
-          1 GIFTED{"\n"}={"\n"}1 Entry
-        </div>
-
+        {/* Side text blocks */}
+        <div className="subtitle left-sub">1 GIFTED{"\n"}={"\n"}1 Entry</div>
         <div className="subtitle right-sub">
-          GIFTED ENTRIES:{"\n"}
-          {entries.length}
+          GIFTED ENTRIES:{"\n"}{entries.length}
         </div>
 
-        <div className="wheel-container">
-          <canvas
-            ref={canvasRef}
-            width={600}
-            height={600}
-            style={{
-              transform: `rotate(${rotation}deg)`,
-              transition: isSpinning ? "transform 5s ease-out" : "none",
-              borderRadius: "50%",
-            }}
-          />
-        </div>
-
-        <div className="controls">
-          <button className="spin-btn" onClick={spinWheel}>Spin</button>
-        </div>
-
-        <div className="manual-entry">
-          <div style={{ display: "flex", gap: "5px", justifyContent: "center" }}>
-            <input type="text" placeholder="Enter name" disabled />
-            <input type="number" min="1" max="20" value={amount} disabled />
-            <button disabled>Add Entry</button>
+        {/* === Centered vertical stack: wheel → spin → inputs → clear === */}
+        <div className="wheel-stack">
+          <div className="wheel-container">
+            <canvas
+              ref={canvasRef}
+              width={600}
+              height={600}
+              style={{
+                transform: `rotate(${rotation}deg)`,
+                transition: isSpinning ? "transform 5s ease-out" : "none",
+                borderRadius: "50%",
+              }}
+            />
           </div>
-          <button className="clear-btn" onClick={clearEntries}>
-            Clear Wheel
-          </button>
+
+          <div className="controls">
+            <button className="spin-btn" onClick={spinWheel}>Spin</button>
+          </div>
+
+          <div className="manual-entry">
+            <div style={{ display: "flex", gap: "5px", justifyContent: "center" }}>
+              <input type="text" placeholder="Enter name" disabled />
+              <input type="number" min="1" max="20" value={amount} disabled readOnly />
+              <button disabled>Add Entry</button>
+            </div>
+
+            <button className="clear-btn" onClick={clearEntries}>
+              Clear Wheel
+            </button>
+          </div>
         </div>
 
+        {/* Scraper badge */}
         <div className="scraper-status">{scraperStatus}</div>
 
+        {/* Winner modal */}
         {showWinnerModal && winnerIndex !== null && (
           <div className="winner-overlay">
             <div className="winner-box">
               <img src="/grimreaper.png" alt="Grim Reaper" className="grim-swing" />
               <h2>💀 Winner! 💀</h2>
-              <p className="winner-name">{entries[winnerIndex]}</p>
-              <button onClick={() => setShowWinnerModal(false)}>Close</button>
+              <p className="winner-name" style={{
+                fontSize: "3.6em",
+                margin: "30px 0",
+                fontFamily: "'Tooth and Nail Regular', Arial, sans-serif",
+                fontWeight: "bold"
+              }}>
+                {entries[winnerIndex]}
+              </p>
+              <button
+                onClick={() => setShowWinnerModal(false)}
+                style={{ padding: "14px 28px", fontSize: "1.4em", borderRadius: "11px", cursor: "pointer" }}
+              >
+                Close
+              </button>
             </div>
           </div>
         )}
