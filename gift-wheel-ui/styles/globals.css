@@ -58,7 +58,7 @@ html, body {
 /* Center stack: wheel → spin → inputs → clear */
 .wheel-stack {
   position: absolute;
-  top: 60%;            /* tuned to sit above footer; adjust 58–62% if desired */
+  top: 55%;            /* ✅ lifted 5% higher to clear footer */
   left: 50%;
   transform: translate(-50%, -50%);
   display: flex;
@@ -67,6 +67,7 @@ html, body {
   gap: 14px;
   z-index: 2;
 }
+
 
 /* Wheel canvas box */
 .wheel-container {
