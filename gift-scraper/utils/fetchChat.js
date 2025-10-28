@@ -1,19 +1,28 @@
-// gift-scraper/utils/fetchChat.js
-import fetch from "node-fetch";
-import { LIVE_CHAT_ID } from "../config.js";
+// /gift-scraper/utils/fetchChat.js
+import { LiveChat } from "youtube-chat";
+import { CHANNEL_ID } from "../config.js";
 
-/**
- * Simulates fetching chat messages.
- * In a real-world scenario, this would connect to an external service
- * or relay bot that forwards live chat messages.
- */
-export default async function fetchChat(channelId) {
-  console.log(`📡 Fetching chat for channel: ${channelId}`);
+let chat = null;
 
-  // ✅ Placeholder for future scraping (relay bot, browser automation, etc.)
-  // This demo returns mock data for now:
-  return [
-    { author: "UserA", message: "I gifted 5 memberships!", gifted: 5 },
-    { author: "UserB", message: "I gifted 1 membership!", gifted: 1 },
-  ];
+export default async function fetchChat() {
+  if (!chat) {
+    chat = new LiveChat({ channelId: CHANNEL_ID });
+    await chat.start();
+  }
+
+  const messages = [];
+  chat.on("message", (msg) => {
+    const text = msg.message[0]?.text || "";
+    const author = msg.author.name;
+    const id = msg.id;
+
+    // Detect gifted membership messages
+    const giftMatch = text.match(/gift(ed)? (\d+) memberships?/i);
+    if (giftMatch) {
+      const gifted = parseInt(giftMatch[2], 10);
+      messages.push({ id, author, gifted });
+    }
+  });
+
+  return messages;
 }

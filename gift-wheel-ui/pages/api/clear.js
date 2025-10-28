@@ -1,21 +1,28 @@
 // /gift-wheel-ui/pages/api/clear.js
-let wheelEntries = []; // Local in-memory entries
-let storedToken = process.env.DELETION_TOKEN; // Loaded from .env.local or VPS env
+import fs from "fs";
+import path from "path";
+
+const FILE_PATH = path.resolve("./data/entries.json");
 
 export default function handler(req, res) {
-  if (req.method === "POST") {
-    const { token } = req.body;
+  if (req.method === "DELETE") {
+    const password = req.headers["x-clear-password"];
 
-    if (!token || token !== storedToken) {
-      return res.status(403).json({ message: "Invalid deletion token." });
+    // 🔐 Same password protection as before
+    if (password !== "2FD1F4AC3897") {
+      return res.status(403).json({ message: "Incorrect password." });
     }
 
-    wheelEntries.length = 0; // Clear array
-    return res.status(200).json({ message: "Wheel cleared successfully." });
+    try {
+      // Wipe file contents clean
+      fs.writeFileSync(FILE_PATH, JSON.stringify({ entries: [] }, null, 2));
+      console.log("🧹 Wheel cleared successfully.");
+      return res.status(200).json({ entries: [] });
+    } catch (err) {
+      console.error("Error clearing wheel:", err);
+      return res.status(500).json({ message: "Error clearing entries file" });
+    }
   }
 
   return res.status(405).json({ message: "Method not allowed" });
 }
-
-// Export the entries array so index.jsx can import it
-export { wheelEntries };

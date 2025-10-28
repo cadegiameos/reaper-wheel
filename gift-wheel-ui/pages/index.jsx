@@ -82,21 +82,29 @@ export default function Home() {
   };
 
   const clearEntries = async () => {
-    const password = prompt("Enter password to clear wheel:");
-    if (password !== "2FD1F4AC3897") {
-      alert("Incorrect password. Wheel not cleared.");
-      return;
+  const password = prompt("Enter password to clear wheel:");
+  if (!password) return;
+
+  try {
+    const res = await fetch("/api/clear", {
+      method: "DELETE",
+      headers: { "x-clear-password": password },
+    });
+
+    if (res.ok) {
+      setEntries([]);
+      setWinnerIndex(null);
+      setFlash(false);
+      setShowWinnerModal(false);
+      alert("Wheel cleared successfully!");
+    } else {
+      alert("Incorrect password or error clearing wheel.");
     }
-    try {
-      const res = await fetch("/api/entries", { method: "DELETE" });
-      if (res.ok) {
-        setEntries([]);
-        setWinnerIndex(null);
-        setFlash(false);
-        setShowWinnerModal(false);
-      }
-    } catch {}
-  };
+  } catch (err) {
+    console.error("Error clearing wheel:", err);
+  }
+};
+
 
   // idle drift
   useEffect(() => {
