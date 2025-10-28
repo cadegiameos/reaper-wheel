@@ -25,15 +25,37 @@ export default function Home() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // auto-refresh entries every 3–5 seconds
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch("/api/entries");
-        const data = await res.json();
-        if (Array.isArray(data.entries)) setEntries(data.entries);
-      } catch {}
-    })();
-  }, []);
+  let isMounted = true;
+
+  const loadEntries = async () => {
+    try {
+      const res = await fetch("/api/entries");
+      const data = await res.json();
+      if (isMounted && Array.isArray(data.entries)) {
+        setEntries(data.entries);
+      }
+    } catch (err) {
+      console.error("Error refreshing entries:", err);
+    }
+  };
+
+  // initial fetch
+  loadEntries();
+
+  // repeat every 3–5 seconds randomly
+  const interval = setInterval(
+    loadEntries,
+    3000 + Math.random() * 2000 // between 3s and 5s
+  );
+
+  return () => {
+    isMounted = false;
+    clearInterval(interval);
+  };
+}, []);
+
 
   useEffect(() => {
     const pollStatus = async () => {
