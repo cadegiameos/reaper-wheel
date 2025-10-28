@@ -201,7 +201,7 @@ export default function Home() {
           width: "1920px",
           height: "1080px",
           transform: `translate(-50%, -50%) scale(${scale})`,
-          transformOrigin: "top left",
+          transformOrigin: "center centre",
         }}
       >
         <div className="container">
